@@ -1,0 +1,3 @@
+model_checkpoint_path: "best_model_Epoch_200_step_34370_mAP_0.8121_loss_9.4284_lr_1e-05"
+all_model_checkpoint_paths: "best_model_Epoch_50_step_8720_mAP_0.8115_loss_9.1569_lr_3e-05"
+all_model_checkpoint_paths: "best_model_Epoch_200_step_34370_mAP_0.8121_loss_9.4284_lr_1e-05"
