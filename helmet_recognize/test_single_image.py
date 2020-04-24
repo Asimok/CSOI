@@ -15,7 +15,7 @@ from helmet_recognize.utils.data_aug import letterbox_resize
 from helmet_recognize.model_config.model import yolov3
 
 parser = argparse.ArgumentParser(description="YOLO-V3 test single image test procedure.")
-parser.add_argument("--input_image", type=str,default="./test_files/2.jpg",
+parser.add_argument("--input_image", type=str,default="./test_files/4.jpg",
                     help="The path of the input image.")
 parser.add_argument("--anchor_path", type=str, default="./train_data/yolo_anchors.txt",
                     help="The path of the anchor txt file.")

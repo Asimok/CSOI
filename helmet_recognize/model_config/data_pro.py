@@ -22,7 +22,7 @@ class Data_preprocess(object):
         self.image_size = 416
         self.batch_size = 32
         self.cell_size = 13
-        self.classes = ["hat","person"]
+        self.classes = ["safe","warning"]
         self.num_classes = len(self.classes)
         self.box_per_cell = 5
         self.class_to_ind = dict(zip(self.classes, range(self.num_classes)))
