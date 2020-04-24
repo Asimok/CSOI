@@ -3,27 +3,27 @@
 
 from __future__ import division, print_function
 
-from utils.misc_utils import parse_anchors, read_class_names
+from helmet_recognize.utils.misc_utils import parse_anchors, read_class_names
 import math
 
 ### Some paths
-train_file = '../train_data/my_data/label/train.txt'  # The path of the training txt file.
-val_file = '../train_data/my_data/label/val.txt'  # The path of the validation txt file.
-restore_path = './train_data/darknet_weights/yolov3.ckpt'  # The path of the weights to restore.
-save_dir = '../checkpoint/'  # The directory of the weights to save.
-log_dir = '../train_data/logs/'  # The directory to store the tensorboard log files.
-progress_log_path = '../train_data/progress.log'  # The path to record the training progress.
-anchor_path = '../train_data/yolo_anchors.txt'  # The path of the anchor txt file.
-class_name_path = '../train_data/coco.names'  # The path of the class names.
+train_file = './train_data/my_data/label/train.txt'  # The path of the training txt file.
+val_file = './train_data/my_data/label/val.txt'  # The path of the validation txt file.
+restore_path = '/home/asimov/PycharmProjects/CSOI/helmet_recognize/train_data/darknet_weights/yolov3.ckpt'  # The path of the weights to restore.
+save_dir = './checkpoint1/'  # The directory of the weights to save.
+log_dir = './train_data/logs/'  # The directory to store the tensorboard log files.
+progress_log_path = './train_data/progress.log'  # The path to record the training progress.
+anchor_path = './train_data/yolo_anchors.txt'  # The path of the anchor txt file.
+class_name_path = './train_data/coco.names'  # The path of the class names.
 
 ### Training releated numbers
 batch_size = 32  #6
 img_size = [416, 416]  # Images will be resized to `img_size` and fed to the network, size format: [width, height]
 letterbox_resize = True  # Whether to use the letterbox resize, i.e., keep the original aspect ratio in the resized image.
-total_epoches = 500
+total_epoches = 5
 train_evaluation_step = 100  # Evaluate on the training batch after some steps.
 val_evaluation_epoch = 50  # Evaluate on the whole validation dataset after some epochs. Set to None to evaluate every epoch.
-save_epoch = 10  # Save the model after some epochs.
+save_epoch = 11  # Save the model after some epochs.
 batch_norm_decay = 0.99  # decay in bn ops
 weight_decay = 5e-4  # l2 weight decay
 global_step = 0  # used when resuming training

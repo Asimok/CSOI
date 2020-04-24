@@ -7,14 +7,15 @@ import numpy as np
 import logging
 from tqdm import trange
 
-import args
 
-from utils.data_utils import get_batch_data
-from utils.misc_utils import shuffle_and_overwrite, make_summary, config_learning_rate, config_optimizer, AverageMeter
-from utils.eval_utils import evaluate_on_cpu, evaluate_on_gpu, get_preds_gpu, voc_eval, parse_gt_rec
-from utils.nms_utils import gpu_nms
+from helmet_recognize.model_config import args
 
-from model import yolov3
+from helmet_recognize.utils.data_utils import get_batch_data
+from helmet_recognize.utils.misc_utils import shuffle_and_overwrite, make_summary, config_learning_rate, config_optimizer, AverageMeter
+from helmet_recognize.utils.eval_utils import evaluate_on_cpu, evaluate_on_gpu, get_preds_gpu, voc_eval, parse_gt_rec
+from helmet_recognize.utils.nms_utils import gpu_nms
+
+from helmet_recognize.model_config.model import yolov3
 
 # setting loggers
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s',

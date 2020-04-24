@@ -5,8 +5,10 @@ from __future__ import division, print_function
 import numpy as np
 import cv2
 import sys
-from utils.data_aug import *
+from helmet_recognize.utils.data_aug import *
 import random
+
+from helmet_recognize.utils.data_aug import resize_with_bbox, random_flip
 
 PY_VERSION = sys.version_info[0]
 iter_cnt = 0

@@ -5,17 +5,20 @@
 from __future__ import division, print_function
 
 import tensorflow as tf
+
 slim = tf.contrib.slim
 
-from utils.layer_utils import conv2d, darknet53_body, yolo_block, upsample_layer
+from helmet_recognize.utils.layer_utils import conv2d, darknet53_body, yolo_block, upsample_layer
+
 
 class yolov3(object):
 
-    def __init__(self, class_num, anchors, use_label_smooth=False, use_focal_loss=False, batch_norm_decay=0.999, weight_decay=5e-4, use_static_shape=True):
+    def __init__(self, class_num, anchors, use_label_smooth=False, use_focal_loss=False, batch_norm_decay=0.999,
+                 weight_decay=5e-4, use_static_shape=True):
 
         # self.anchors = [[10, 13], [16, 30], [33, 23],
-                         # [30, 61], [62, 45], [59,  119],
-                         # [116, 90], [156, 198], [373,326]]
+        # [30, 61], [62, 45], [59,  119],
+        # [116, 90], [156, 198], [373,326]]
         self.class_num = class_num
         self.anchors = anchors
         self.batch_norm_decay = batch_norm_decay
@@ -41,7 +44,7 @@ class yolov3(object):
         }
 
         with slim.arg_scope([slim.conv2d, slim.batch_norm], reuse=reuse):
-            with slim.arg_scope([slim.conv2d], 
+            with slim.arg_scope([slim.conv2d],
                                 normalizer_fn=slim.batch_norm,
                                 normalizer_params=batch_norm_params,
                                 biases_initializer=None,
@@ -58,7 +61,9 @@ class yolov3(object):
                     feature_map_1 = tf.identity(feature_map_1, name='feature_map_1')
 
                     inter1 = conv2d(inter1, 256, 1)
-                    inter1 = upsample_layer(inter1, route_2.get_shape().as_list() if self.use_static_shape else tf.shape(route_2))
+                    inter1 = upsample_layer(inter1,
+                                            route_2.get_shape().as_list() if self.use_static_shape else tf.shape(
+                                                route_2))
                     concat1 = tf.concat([inter1, route_2], axis=3)
 
                     inter2, net = yolo_block(concat1, 256)
@@ -68,7 +73,9 @@ class yolov3(object):
                     feature_map_2 = tf.identity(feature_map_2, name='feature_map_2')
 
                     inter2 = conv2d(inter2, 128, 1)
-                    inter2 = upsample_layer(inter2, route_1.get_shape().as_list() if self.use_static_shape else tf.shape(route_1))
+                    inter2 = upsample_layer(inter2,
+                                            route_1.get_shape().as_list() if self.use_static_shape else tf.shape(
+                                                route_1))
                     concat2 = tf.concat([inter2, route_1], axis=3)
 
                     _, feature_map_3 = yolo_block(concat2, 128)
@@ -86,7 +93,8 @@ class yolov3(object):
         anchors: shape: [3, 2]
         '''
         # NOTE: size in [h, w] format! don't get messed up!
-        grid_size = feature_map.get_shape().as_list()[1:3] if self.use_static_shape else tf.shape(feature_map)[1:3]  # [13, 13]
+        grid_size = feature_map.get_shape().as_list()[1:3] if self.use_static_shape else tf.shape(feature_map)[
+                                                                                         1:3]  # [13, 13]
         # the downscale ratio in height and weight
         ratio = tf.cast(self.img_size / grid_size, tf.float32)
         # rescale the anchors to the feature_map
@@ -136,7 +144,6 @@ class yolov3(object):
         # prob_logits: [N, 13, 13, 3, class_num]
         return x_y_offset, boxes, conf_logits, prob_logits
 
-
     def predict(self, feature_maps):
         '''
         Receive the returned feature_maps from `forward` function,
@@ -169,7 +176,7 @@ class yolov3(object):
             boxes_list.append(boxes)
             confs_list.append(confs)
             probs_list.append(probs)
-        
+
         # collect results on three scales
         # take 416*416 input image for example:
         # shape: [N, (13*13+26*26+52*52)*3, 4]
@@ -188,7 +195,7 @@ class yolov3(object):
         boxes = tf.concat([x_min, y_min, x_max, y_max], axis=-1)
 
         return boxes, confs, probs
-    
+
     def loss_layer(self, feature_map_i, y_true, anchors):
         '''
         calc loss function from a certain scale
@@ -197,7 +204,7 @@ class yolov3(object):
             y_true: y_ture from a certain scale. shape: [N, 13, 13, 3, 5 + num_class + 1] etc.
             anchors: shape [9, 2]
         '''
-        
+
         # size in [h, w] format! don't get messed up!
         grid_size = tf.shape(feature_map_i)[1:3]
         # the downscale ratio in height and weight
@@ -218,8 +225,10 @@ class yolov3(object):
         # the calculation of ignore mask if referred from
         # https://github.com/pjreddie/darknet/blob/master/src/yolo_layer.c#L179
         ignore_mask = tf.TensorArray(tf.float32, size=0, dynamic_size=True)
+
         def loop_cond(idx, ignore_mask):
             return tf.less(idx, tf.cast(N, tf.int32))
+
         def loop_body(idx, ignore_mask):
             # shape: [13, 13, 3, 4] & [13, 13, 3]  ==>  [V, 4]
             # V: num of true gt box of each image in a batch
@@ -233,6 +242,7 @@ class yolov3(object):
             # finally will be shape: [N, 13, 13, 3]
             ignore_mask = ignore_mask.write(idx, ignore_mask_tmp)
             return idx + 1, ignore_mask
+
         _, ignore_mask = tf.while_loop(cond=loop_cond, body=loop_body, loop_vars=[0, ignore_mask])
         ignore_mask = ignore_mask.stack()
         # shape: [N, 13, 13, 3, 1]
@@ -264,7 +274,8 @@ class yolov3(object):
         # box size punishment: 
         # box with smaller area has bigger weight. This is taken from the yolo darknet C source code.
         # shape: [N, 13, 13, 3, 1]
-        box_loss_scale = 2. - (y_true[..., 2:3] / tf.cast(self.img_size[1], tf.float32)) * (y_true[..., 3:4] / tf.cast(self.img_size[0], tf.float32))
+        box_loss_scale = 2. - (y_true[..., 2:3] / tf.cast(self.img_size[1], tf.float32)) * (
+                    y_true[..., 3:4] / tf.cast(self.img_size[0], tf.float32))
 
         ############
         # loss_part
@@ -279,8 +290,10 @@ class yolov3(object):
         # shape: [N, 13, 13, 3, 1]
         conf_pos_mask = object_mask
         conf_neg_mask = (1 - object_mask) * ignore_mask
-        conf_loss_pos = conf_pos_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels=object_mask, logits=pred_conf_logits)
-        conf_loss_neg = conf_neg_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels=object_mask, logits=pred_conf_logits)
+        conf_loss_pos = conf_pos_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels=object_mask,
+                                                                                logits=pred_conf_logits)
+        conf_loss_neg = conf_neg_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels=object_mask,
+                                                                                logits=pred_conf_logits)
         # TODO: may need to balance the pos-neg by multiplying some weights
         conf_loss = conf_loss_pos + conf_loss_neg
         if self.use_focal_loss:
@@ -298,11 +311,11 @@ class yolov3(object):
             label_target = (1 - delta) * y_true[..., 5:-1] + delta * 1. / self.class_num
         else:
             label_target = y_true[..., 5:-1]
-        class_loss = object_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels=label_target, logits=pred_prob_logits) * mix_w
+        class_loss = object_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels=label_target,
+                                                                           logits=pred_prob_logits) * mix_w
         class_loss = tf.reduce_sum(class_loss) / N
 
         return xy_loss, wh_loss, conf_loss, class_loss
-    
 
     def box_iou(self, pred_boxes, valid_true_boxes):
         '''
@@ -344,7 +357,6 @@ class yolov3(object):
 
         return iou
 
-    
     def compute_loss(self, y_pred, y_true):
         '''
         param:
